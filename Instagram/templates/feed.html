@@ -1,0 +1,308 @@
+<!-- templates/feed.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram - Feed</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- Create Post Modal -->
+<div id="createModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleCreateModal()">&times;</span>
+        <h2>Create a new post</h2>
+        <form id="createPostForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" id="postImage" name="image" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="postCaption" name="caption" placeholder="Write a caption...">
+            </div>
+            <div class="form-group">
+                <input type="text" id="postLocation" name="location" placeholder="Add location (optional)">
+            </div>
+            <button type="submit" class="btn-primary">Post</button>
+        </form>
+    </div>
+</div>
+
+<div class="app-container">
+
+    <!-- LEFT SIDEBAR: Navigation -->
+    <aside class="left-sidebar">
+        <div class="sidebar-logo">Instagram</div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('feed') }}" class="nav-link active">
+                <span class="icon">🏠</span> Home
+            </a>
+            <a href="{{ url_for('explore') }}" class="nav-link">
+                <span class="icon">🔍</span> Explore
+            </a>
+            <a class="nav-link" onclick="toggleCreateModal()">
+                <span class="icon">➕</span> Create
+            </a>
+            <a href="{{ url_for('profile', username=user.username) }}" class="nav-link">
+                <span class="icon">👤</span> Profile
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-link">
+                <span class="icon">🚪</span> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <!-- CENTER: Main Feed -->
+    <main class="main-feed">
+        <div class="feed-container">
+            {% for post in posts %}
+            <div class="post" id="post-{{ post.id }}">
+
+                <!-- Post Header -->
+                <div class="post-header">
+                    <div class="post-user-info">
+                        <img src="{{ url_for('static', filename='uploads/' ~ post.author.profile_pic) }}" alt="Profile" class="post-avatar">
+                        <div>
+                            <a href="{{ url_for('profile', username=post.author.username) }}" class="post-username">
+                                {{ post.author.username }}
+                            </a>
+                            {% if post.location %}
+                            <span class="post-location">{{ post.location }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="post-date">{{ post.created_at.strftime('%b %d') }}</span>
+                </div>
+
+                <!-- Post Image -->
+                <img src="{{ url_for('static', filename='uploads/' ~ post.image) }}" alt="Post" class="post-image">
+
+                <!-- Post Actions -->
+                <div class="post-actions">
+                    <button class="action-btn" onclick="likePost({{ post.id }})">
+                        <span class="like-icon" id="like-icon-{{ post.id }}">❤️</span>
+                    </button>
+                    <button class="action-btn" onclick="openCommentBox({{ post.id }})">
+                        <span>💬</span>
+                    </button>
+                    <button class="action-btn" onclick="sharePost({{ post.id }})">
+                        <span>📤</span>
+                    </button>
+                    <button class="action-btn" onclick="reportPost({{ post.id }})">
+                        <span>🚩</span>
+                    </button>
+                </div>
+
+                <!-- Post Stats -->
+                <div class="post-stats">
+                    <span class="likes-count" id="likes-{{ post.id }}">{{ post.likes|length }} likes</span>
+                </div>
+
+                <!-- Post Caption -->
+                <div class="post-caption">
+                    <strong>{{ post.author.username }}</strong> {{ post.caption }}
+                </div>
+
+                <!-- Comment Box (toggle) -->
+                <div class="comment-box" id="comment-box-{{ post.id }}" style="display:none;">
+                    <input
+                        type="text"
+                        placeholder="Add a comment..."
+                        id="comment-input-{{ post.id }}"
+                        onkeydown="submitComment(event, {{ post.id }})"
+                    />
+                </div>
+
+                <!-- Comments List -->
+                <div class="post-comments" id="comments-{{ post.id }}">
+                    <div class="comments-list">
+                        {% for comment in post.comments %}
+                        <div class="comment">
+                            <strong>{{ comment.author.username }}</strong> {{ comment.text }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR: Tweets -->
+    <aside class="tweet-sidebar">
+        <!-- Tweet Create Box -->
+        <div class="tweet-box">
+            <form id="tweetForm" enctype="multipart/form-data">
+                <textarea name="content" placeholder="What's happening?" required></textarea>
+                <input type="file" name="image" accept="image/*">
+                <button type="submit" class="btn-primary">Tweet</button>
+            </form>
+        </div>
+
+        <!-- Tweets List -->
+        {% for tweet in tweets %}
+        <div class="tweet-card">
+            <div class="tweet-header">
+                <img src="{{ url_for('static', filename='uploads/' ~ tweet.user.profile_pic) }}" class="tweet-avatar">
+                <strong>{{ tweet.user.username }}</strong>
+            </div>
+            <p>{{ tweet.content }}</p>
+            {% if tweet.image %}
+            <img src="{{ url_for('static', filename='uploads/' ~ tweet.image) }}" class="tweet-image">
+            {% endif %}
+            <div class="tweet-actions">
+                <button onclick="likeTweet({{ tweet.id }})">❤️</button>
+                <button onclick="shareTweet({{ tweet.id }})">🔗</button>
+                {% if session.get('is_admin') %}
+                <button onclick="deleteTweet({{ tweet.id }})">🗑️</button>
+                <button onclick="banUser({{ tweet.user_id }})">🚫</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </aside>
+
+</div><!-- end .app-container -->
+
+<script>
+// ── Modal ──────────────────────────────────────────────
+function toggleCreateModal() {
+    const modal = document.getElementById('createModal');
+    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+}
+
+// ── Like Post ─────────────────────────────────────────
+function likePost(postId) {
+    fetch(`/api/like/${postId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) return;
+            document.getElementById(`likes-${postId}`).textContent = `${data.likes} likes`;
+            const icon = document.getElementById(`like-icon-${postId}`);
+            icon.classList.toggle('liked');
+        })
+        .catch(err => console.error(err));
+}
+
+// ── Comment Box ───────────────────────────────────────
+function openCommentBox(postId) {
+    const box = document.getElementById(`comment-box-${postId}`);
+    const input = document.getElementById(`comment-input-${postId}`);
+    box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    if (box.style.display === 'block') input.focus();
+}
+
+function submitComment(event, postId) {
+    if (event.key !== 'Enter') return;
+    const input = document.getElementById(`comment-input-${postId}`);
+    const text = input.value.trim();
+    if (!text) return;
+
+    fetch(`/api/comment/${postId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const list = document.querySelector(`#comments-${postId} .comments-list`);
+            const div = document.createElement('div');
+            div.className = 'comment';
+            div.innerHTML = `<strong>${data.username}</strong> ${data.text}`;
+            list.appendChild(div);
+            input.value = '';
+        }
+    })
+    .catch(err => console.error('Comment error:', err));
+}
+
+// ── Share Post ────────────────────────────────────────
+function sharePost(postId) {
+    const postUrl = `${window.location.origin}/api/post/${postId}`;
+    if (navigator.share) {
+        navigator.share({ title: 'Check out this post', url: postUrl })
+            .catch(err => console.log('Share cancelled', err));
+    } else {
+        navigator.clipboard.writeText(postUrl)
+            .then(() => alert('🔗 Link copied to clipboard!'))
+            .catch(() => alert('❌ Unable to share this post'));
+    }
+}
+
+// ── Report Post ───────────────────────────────────────
+function reportPost(postId) {
+    const reason = prompt('Why are you reporting this post?');
+    if (!reason) return;
+    fetch(`/report/${postId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
+    })
+    .then(res => res.json())
+    .then(() => alert('Post reported successfully 🚩'));
+}
+
+// ── Tweet Form ────────────────────────────────────────
+(function () {
+    let submitting = false;
+    document.getElementById("tweetForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (submitting) return;
+        submitting = true;
+        const btn = this.querySelector("button[type=submit]");
+        if (btn) btn.disabled = true;
+        const formData = new FormData(this);
+        fetch("/api/tweet", { method: "POST", body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) { this.reset(); location.reload(); }
+                else { alert(data.error || "Failed to post tweet."); }
+            })
+            .catch(err => console.error("Tweet error:", err))
+            .finally(() => { submitting = false; if (btn) btn.disabled = false; });
+    });
+})();
+
+// ── Like Tweet ────────────────────────────────────────
+function likeTweet(tweetId) {
+    fetch(`/api/tweet/like/${tweetId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => { if (data.success) console.log('Likes:', data.likes); })
+        .catch(err => console.error(err));
+}
+
+function shareTweet(tweetId) {
+    const url = `${window.location.origin}/tweet/${tweetId}`;
+    navigator.clipboard.writeText(url)
+        .then(() => alert('🔗 Tweet link copied!'))
+        .catch(() => alert('❌ Unable to copy link'));
+}
+
+function deleteTweet(tweetId) {
+    if (!confirm('Delete this tweet?')) return;
+    fetch(`/admin/delete-tweet/${tweetId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => { if (data.success) location.reload(); });
+}
+
+function banUser(userId) {
+    if (!confirm('Ban this user?')) return;
+    fetch(`/admin/ban-user/${userId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => { if (data.success) alert('User banned.'); });
+}
+
+// Close modal on outside click
+window.onclick = function (e) {
+    const modal = document.getElementById('createModal');
+    if (e.target === modal) modal.style.display = 'none';
+};
+</script>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

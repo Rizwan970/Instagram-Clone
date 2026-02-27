@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reported Posts · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --brand: #E1306C; --sidebar-w: 240px;
+  --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+  --slate-400: #94a3b8; --slate-500: #64748b; --slate-600: #475569;
+  --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--slate-100); color: var(--slate-800); display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid var(--slate-200); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 20; }
+.sidebar-brand { padding: 24px 20px 20px; border-bottom: 1px solid var(--slate-100); }
+.brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #f97316, #e1306c, #833ab4); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+.sidebar-brand h2 { font-size: 16px; font-weight: 800; color: var(--slate-900); }
+.sidebar-brand p { font-size: 11px; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; }
+.sidebar-nav { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.nav-section-label { font-size: 10px; font-weight: 700; color: var(--slate-400); text-transform: uppercase; letter-spacing: 1px; padding: 12px 8px 6px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: var(--slate-600); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+.nav-item:hover { background: var(--slate-100); color: var(--slate-900); }
+.nav-item.active { background: #fce7f3; color: var(--brand); font-weight: 700; }
+.nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; flex-shrink: 0; }
+.sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--slate-100); }
+
+/* MAIN */
+.main { margin-left: var(--sidebar-w); flex: 1; }
+.topbar { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.topbar h1 { font-size: 20px; font-weight: 800; color: var(--slate-900); }
+.admin-chip { background: #fce7f3; color: var(--brand); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; }
+.content { padding: 28px; }
+
+/* REPORTS GRID */
+.reports-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+
+.report-card {
+  background: #fff; border-radius: 16px; border: 1px solid var(--slate-200);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden;
+  animation: fadeUp 0.4s ease both;
+}
+
+.report-card-header {
+  padding: 16px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.reporter-info { display: flex; align-items: center; gap: 10px; }
+.reporter-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--slate-200); }
+
+.reporter-info .name { font-size: 13px; font-weight: 700; color: var(--slate-800); }
+.reporter-info .date { font-size: 11px; color: var(--slate-400); }
+
+.report-badge {
+  background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;
+  font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+
+.report-image-wrap {
+  position: relative; aspect-ratio: 4/3; overflow: hidden; background: var(--slate-100);
+}
+.report-image-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.image-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.report-image-wrap:hover .image-overlay { background: rgba(0,0,0,0.3); }
+
+.report-card-body { padding: 16px 18px; }
+
+.reason-label { font-size: 11px; font-weight: 700; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.reason-text { font-size: 14px; color: var(--slate-700); line-height: 1.5; margin-bottom: 16px; }
+
+.post-meta { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--slate-50); border-radius: 10px; margin-bottom: 16px; }
+.post-author-pic { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.post-author-name { font-size: 13px; font-weight: 600; color: var(--slate-800); }
+.post-caption { font-size: 12px; color: var(--slate-400); }
+
+.action-row { display: flex; gap: 8px; }
+.btn-dismiss {
+  flex: 1; padding: 10px; border: 1.5px solid var(--slate-200); border-radius: 10px;
+  font-size: 13px; font-weight: 600; color: var(--slate-600); background: #fff;
+  cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+}
+.btn-dismiss:hover { background: var(--slate-50); }
+.btn-delete {
+  flex: 1; padding: 10px; background: #fee2e2; border: 1.5px solid #fecaca; border-radius: 10px;
+  font-size: 13px; font-weight: 600; color: #dc2626; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+}
+.btn-delete:hover { background: #fecaca; }
+
+/* empty */
+.empty-state {
+  text-align: center; padding: 80px 20px; background: #fff;
+  border-radius: 16px; border: 1px solid var(--slate-200);
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state h3 { font-size: 18px; font-weight: 700; color: var(--slate-800); margin-bottom: 8px; }
+.empty-state p { color: var(--slate-400); font-size: 14px; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🛡️</div>
+    <h2>Instagram Admin</h2>
+    <p>Control Panel</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="/admin/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/admin/analytics" class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
+    <div class="nav-section-label">Moderation</div>
+    <a href="/admin/reports" class="nav-item active"><span class="nav-icon">🚩</span> Reported Posts</a>
+    <a href="/admin/posts" class="nav-item"><span class="nav-icon">🖼️</span> All Posts</a>
+    <div class="nav-section-label">Users</div>
+    <a href="/admin/users" class="nav-item"><span class="nav-icon">👥</span> Manage Users</a>
+    <a href="/admin/banned" class="nav-item"><span class="nav-icon">🚫</span> Banned Users</a>
+    <div class="nav-section-label">System</div>
+    <a href="/admin/settings" class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="/admin/logout" class="nav-item" style="color:#ef4444;"><span class="nav-icon">🚪</span> Logout</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h1>🚩 Reported Posts</h1>
+    <span class="admin-chip">🛡️ Admin</span>
+  </div>
+
+  <div class="content">
+    {% if reports %}
+    <div class="reports-grid">
+      {% for r in reports %}
+      <div class="report-card" id="report-{{ r.id }}">
+
+        <div class="report-card-header">
+          <div class="reporter-info">
+            <img class="reporter-avatar" src="/static/uploads/default.jpg">
+            <div>
+              <div class="name">Reported Post</div>
+              <div class="date">{{ r.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+            </div>
+          </div>
+          <span class="report-badge">🚩 Report</span>
+        </div>
+
+        <div class="report-image-wrap">
+          <img src="{{ url_for('static', filename='uploads/' ~ r.post.image) }}"
+               onerror="this.src='/static/uploads/default.jpg'">
+          <div class="image-overlay"></div>
+        </div>
+
+        <div class="report-card-body">
+          <div class="reason-label">Report Reason</div>
+          <div class="reason-text">{{ r.reason }}</div>
+
+          <div class="post-meta">
+            <img class="post-author-pic"
+                 src="{{ url_for('static', filename='uploads/' ~ r.post.author.profile_pic) }}"
+                 onerror="this.src='/static/uploads/default.jpg'">
+            <div>
+              <div class="post-author-name">{{ r.post.author.username }}</div>
+              {% if r.post.caption %}
+              <div class="post-caption">{{ r.post.caption[:60] }}{% if r.post.caption|length > 60 %}…{% endif %}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button class="btn-dismiss" onclick="dismiss({{ r.id }}, this)">✓ Dismiss</button>
+            <button class="btn-delete" onclick="deletePost({{ r.post.id }}, {{ r.id }}, this)">🗑️ Delete Post</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">✅</div>
+      <h3>No Reports</h3>
+      <p>Everything looks good. No posts have been reported yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function dismiss(reportId, btn) {
+  // Just visually remove — you can add a dismiss endpoint if needed
+  btn.closest('.report-card').style.opacity = '0.5';
+  btn.closest('.report-card').style.pointerEvents = 'none';
+  fetch(`/admin/dismiss-report/${reportId}`, { method: 'POST' })
+    .then(() => btn.closest('.report-card').remove())
+    .catch(() => {
+      // If endpoint doesn't exist yet, just remove it visually
+      btn.closest('.report-card').remove();
+    });
+}
+
+function deletePost(postId, reportId, btn) {
+  if (!confirm('⚠️ Permanently delete this post? This cannot be undone.')) return;
+  fetch(`/admin/delete-reported-post/${postId}`, { method: 'POST' })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) document.getElementById(`report-${reportId}`).remove();
+    });
+}
+</script>
+</body>
+</html>

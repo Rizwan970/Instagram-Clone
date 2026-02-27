@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Posts · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --brand: #E1306C; --sidebar-w: 240px;
+  --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+  --slate-400: #94a3b8; --slate-500: #64748b; --slate-600: #475569;
+  --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--slate-100); color: var(--slate-800); display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid var(--slate-200); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 20; }
+.sidebar-brand { padding: 24px 20px 20px; border-bottom: 1px solid var(--slate-100); }
+.brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #f97316, #e1306c, #833ab4); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+.sidebar-brand h2 { font-size: 16px; font-weight: 800; color: var(--slate-900); }
+.sidebar-brand p { font-size: 11px; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; }
+.sidebar-nav { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.nav-section-label { font-size: 10px; font-weight: 700; color: var(--slate-400); text-transform: uppercase; letter-spacing: 1px; padding: 12px 8px 6px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: var(--slate-600); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+.nav-item:hover { background: var(--slate-100); color: var(--slate-900); }
+.nav-item.active { background: #fce7f3; color: var(--brand); font-weight: 700; }
+.nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; flex-shrink: 0; }
+.sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--slate-100); }
+
+/* MAIN */
+.main { margin-left: var(--sidebar-w); flex: 1; }
+.topbar { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.topbar h1 { font-size: 20px; font-weight: 800; color: var(--slate-900); }
+.admin-chip { background: #fce7f3; color: var(--brand); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; }
+.content { padding: 28px; }
+
+/* TOOLBAR */
+.toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.search-wrap { position: relative; flex: 1; max-width: 360px; }
+.search-wrap input { width: 100%; padding: 10px 16px 10px 40px; border: 1.5px solid var(--slate-200); border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--slate-800); background: #fff; outline: none; transition: border-color 0.2s; }
+.search-wrap input:focus { border-color: var(--brand); }
+.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--slate-400); font-size: 14px; }
+.count-badge { background: var(--slate-100); color: var(--slate-600); font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 10px; margin-left: auto; }
+
+/* POSTS GRID */
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.post-card {
+  background: #fff; border-radius: 14px; border: 1px solid var(--slate-200);
+  overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  animation: fadeUp 0.3s ease both;
+  transition: box-shadow 0.2s;
+}
+.post-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+
+.post-img-wrap { position: relative; aspect-ratio: 1; overflow: hidden; background: var(--slate-100); }
+.post-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.post-card:hover .post-img-wrap img { transform: scale(1.04); }
+
+.post-stats-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center; gap: 20px;
+  opacity: 0; transition: opacity 0.2s;
+}
+.post-card:hover .post-stats-overlay { opacity: 1; }
+.stat-item { color: #fff; font-size: 14px; font-weight: 700; }
+
+.post-card-body { padding: 14px 16px; }
+
+.post-author { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.author-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--slate-100); }
+.author-name { font-size: 13px; font-weight: 700; color: var(--slate-900); }
+.post-date { font-size: 11px; color: var(--slate-400); }
+
+.post-caption {
+  font-size: 13px; color: var(--slate-600); line-height: 1.5;
+  margin-bottom: 12px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.post-actions { display: flex; gap: 8px; }
+.btn-sm { padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1.5px solid; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
+.btn-view { border-color: var(--slate-200); color: var(--slate-600); background: #fff; }
+.btn-view:hover { border-color: #bfdbfe; color: #3b82f6; background: #eff6ff; }
+.btn-delete { border-color: #fecaca; color: #dc2626; background: #fff; }
+.btn-delete:hover { background: #fee2e2; }
+
+.empty { text-align: center; padding: 80px; color: var(--slate-400); font-size: 15px; background: #fff; border-radius: 16px; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🛡️</div>
+    <h2>Instagram Admin</h2>
+    <p>Control Panel</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="/admin/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/admin/analytics" class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
+    <div class="nav-section-label">Moderation</div>
+    <a href="/admin/reports" class="nav-item"><span class="nav-icon">🚩</span> Reported Posts</a>
+    <a href="/admin/posts" class="nav-item active"><span class="nav-icon">🖼️</span> All Posts</a>
+    <div class="nav-section-label">Users</div>
+    <a href="/admin/users" class="nav-item"><span class="nav-icon">👥</span> Manage Users</a>
+    <a href="/admin/banned" class="nav-item"><span class="nav-icon">🚫</span> Banned Users</a>
+    <div class="nav-section-label">System</div>
+    <a href="/admin/settings" class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="/admin/logout" class="nav-item" style="color:#ef4444;"><span class="nav-icon">🚪</span> Logout</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h1>🖼️ All Posts</h1>
+    <span class="admin-chip">🛡️ Admin</span>
+  </div>
+
+  <div class="content">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search by username or caption…" oninput="filterPosts()">
+      </div>
+      <div class="count-badge">{{ posts|length }} posts total</div>
+    </div>
+
+    {% if posts %}
+    <div class="posts-grid" id="postsGrid">
+      {% for post in posts %}
+      <div class="post-card" id="post-{{ post.id }}"
+           data-author="{{ post.author.username|lower }}"
+           data-caption="{{ (post.caption or '')|lower }}">
+
+        <div class="post-img-wrap">
+          <img src="{{ url_for('static', filename='uploads/' ~ post.image) }}"
+               onerror="this.src='/static/uploads/default.jpg'">
+          <div class="post-stats-overlay">
+            <span class="stat-item">❤️ {{ post.likes|length }}</span>
+            <span class="stat-item">💬 {{ post.comments|length }}</span>
+          </div>
+        </div>
+
+        <div class="post-card-body">
+          <div class="post-author">
+            <img class="author-avatar"
+                 src="{{ url_for('static', filename='uploads/' ~ post.author.profile_pic) }}"
+                 onerror="this.src='/static/uploads/default.jpg'">
+            <div>
+              <div class="author-name">{{ post.author.username }}</div>
+              <div class="post-date">{{ post.created_at.strftime('%b %d, %Y') }}</div>
+            </div>
+          </div>
+
+          {% if post.caption %}
+          <div class="post-caption">{{ post.caption }}</div>
+          {% endif %}
+
+          <div class="post-actions">
+            <a href="/profile/{{ post.author.username }}" class="btn-sm btn-view" target="_blank">View Profile</a>
+            <button class="btn-sm btn-delete" onclick="deletePost({{ post.id }})">🗑️ Delete</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty">
+      <div class="empty-icon">🖼️</div>
+      <p>No posts found on the platform yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function filterPosts() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('.post-card[data-author]').forEach(card => {
+    const match = card.dataset.author.includes(q) || card.dataset.caption.includes(q);
+    card.style.display = match ? '' : 'none';
+  });
+}
+
+function deletePost(id) {
+  if (!confirm('⚠️ Permanently delete this post?')) return;
+  fetch(`/admin/delete-post/${id}`, { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { if (d.success) document.getElementById(`post-${id}`).remove(); });
+}
+</script>
+</body>
+</html>

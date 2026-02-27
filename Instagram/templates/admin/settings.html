@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --brand: #E1306C; --sidebar-w: 240px;
+  --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+  --slate-400: #94a3b8; --slate-500: #64748b; --slate-600: #475569;
+  --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--slate-100); color: var(--slate-800); display: flex; min-height: 100vh; }
+
+.sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid var(--slate-200); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 20; }
+.sidebar-brand { padding: 24px 20px 20px; border-bottom: 1px solid var(--slate-100); }
+.brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #f97316, #e1306c, #833ab4); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+.sidebar-brand h2 { font-size: 16px; font-weight: 800; color: var(--slate-900); }
+.sidebar-brand p { font-size: 11px; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; }
+.sidebar-nav { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.nav-section-label { font-size: 10px; font-weight: 700; color: var(--slate-400); text-transform: uppercase; letter-spacing: 1px; padding: 12px 8px 6px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: var(--slate-600); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+.nav-item:hover { background: var(--slate-100); color: var(--slate-900); }
+.nav-item.active { background: #fce7f3; color: var(--brand); font-weight: 700; }
+.nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; flex-shrink: 0; }
+.sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--slate-100); }
+
+.main { margin-left: var(--sidebar-w); flex: 1; }
+.topbar { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.topbar h1 { font-size: 20px; font-weight: 800; color: var(--slate-900); }
+.admin-chip { background: #fce7f3; color: var(--brand); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; }
+.content { padding: 28px; max-width: 760px; }
+
+/* SETTINGS SECTIONS */
+.settings-section { background: #fff; border-radius: 16px; border: 1px solid var(--slate-200); margin-bottom: 20px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.section-header { padding: 18px 22px; border-bottom: 1px solid var(--slate-100); }
+.section-header h3 { font-size: 15px; font-weight: 700; color: var(--slate-900); }
+.section-header p { font-size: 13px; color: var(--slate-400); margin-top: 2px; }
+.section-body { padding: 6px 0; }
+
+/* TOGGLE ROWS */
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px; border-bottom: 1px solid var(--slate-50);
+  transition: background 0.12s;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-row:hover { background: var(--slate-50); }
+
+.setting-info .setting-label { font-size: 14px; font-weight: 600; color: var(--slate-800); }
+.setting-info .setting-desc { font-size: 12px; color: var(--slate-400); margin-top: 2px; }
+
+/* TOGGLE SWITCH */
+.toggle-wrap { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-slider {
+  position: absolute; inset: 0; background: var(--slate-200); border-radius: 999px; cursor: pointer; transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+  background: #fff; border-radius: 50%; transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.toggle-wrap input:checked + .toggle-slider { background: var(--brand); }
+.toggle-wrap input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+/* DANGER ZONE */
+.danger-section { background: #fff; border-radius: 16px; border: 1.5px solid #fecaca; margin-bottom: 20px; overflow: hidden; }
+.danger-header { padding: 18px 22px; border-bottom: 1px solid #fef2f2; background: #fef2f2; }
+.danger-header h3 { font-size: 15px; font-weight: 700; color: #dc2626; }
+.danger-header p { font-size: 13px; color: #ef4444; margin-top: 2px; }
+.danger-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; }
+.btn-danger {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 18px; background: #fff; border: 1.5px solid #fecaca;
+  border-radius: 10px; color: #dc2626; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  width: fit-content;
+}
+.btn-danger:hover { background: #fee2e2; }
+
+/* SUCCESS TOAST */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: #1e293b; color: #fff; padding: 12px 20px;
+  border-radius: 10px; font-size: 14px; font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.3s; z-index: 999;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🛡️</div>
+    <h2>Instagram Admin</h2>
+    <p>Control Panel</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="/admin/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/admin/analytics" class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
+    <div class="nav-section-label">Moderation</div>
+    <a href="/admin/reports" class="nav-item"><span class="nav-icon">🚩</span> Reported Posts</a>
+    <a href="/admin/posts" class="nav-item"><span class="nav-icon">🖼️</span> All Posts</a>
+    <div class="nav-section-label">Users</div>
+    <a href="/admin/users" class="nav-item"><span class="nav-icon">👥</span> Manage Users</a>
+    <a href="/admin/banned" class="nav-item"><span class="nav-icon">🚫</span> Banned Users</a>
+    <div class="nav-section-label">System</div>
+    <a href="/admin/settings" class="nav-item active"><span class="nav-icon">⚙️</span> Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="/admin/logout" class="nav-item" style="color:#ef4444;"><span class="nav-icon">🚪</span> Logout</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h1>⚙️ Settings</h1>
+    <span class="admin-chip">🛡️ Admin</span>
+  </div>
+
+  <div class="content">
+
+    <!-- PLATFORM SETTINGS -->
+    <div class="settings-section">
+      <div class="section-header">
+        <h3>🌐 Platform Settings</h3>
+        <p>Control general platform behaviour</p>
+      </div>
+      <div class="section-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Allow New Registrations</div>
+            <div class="setting-desc">Users can sign up for new accounts</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" checked onchange="saveSetting('registrations', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Allow Post Uploads</div>
+            <div class="setting-desc">Users can upload new photos and posts</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" checked onchange="saveSetting('uploads', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Allow Comments</div>
+            <div class="setting-desc">Users can comment on posts</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" checked onchange="saveSetting('comments', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Require Post Approval</div>
+            <div class="setting-desc">Admin must approve posts before they go live</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" onchange="saveSetting('approval', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODERATION SETTINGS -->
+    <div class="settings-section">
+      <div class="section-header">
+        <h3>🛡️ Moderation</h3>
+        <p>Automated content moderation settings</p>
+      </div>
+      <div class="section-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Auto-hide Reported Posts</div>
+            <div class="setting-desc">Automatically hide posts with 3+ reports pending review</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" checked onchange="saveSetting('auto_hide', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Email Alerts on Reports</div>
+            <div class="setting-desc">Get notified when a post is reported</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" onchange="saveSetting('report_alerts', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN INFO -->
+    <div class="settings-section">
+      <div class="section-header">
+        <h3>👤 Admin Info</h3>
+        <p>Your admin account details</p>
+      </div>
+      <div class="section-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Change Admin Password</div>
+            <div class="setting-desc">Update your login credentials</div>
+          </div>
+          <button onclick="window.location.href='/admin/change-password'"
+                  style="padding:8px 14px; border:1.5px solid var(--slate-200); border-radius:8px; font-size:13px; font-weight:600; background:#fff; color:var(--slate-600); cursor:pointer; font-family:'DM Sans',sans-serif;">
+            Change →
+          </button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Admin Session</div>
+            <div class="setting-desc">You are currently logged in as Admin</div>
+          </div>
+          <a href="/admin/logout"
+             style="padding:8px 14px; border:1.5px solid #fecaca; border-radius:8px; font-size:13px; font-weight:600; background:#fff; color:#dc2626; text-decoration:none;">
+            Logout
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- DANGER ZONE -->
+    <div class="danger-section">
+      <div class="danger-header">
+        <h3>⚠️ Danger Zone</h3>
+        <p>Irreversible actions — proceed with caution</p>
+      </div>
+      <div class="danger-body">
+        <button class="btn-danger" onclick="clearReports()">🗑️ Clear All Dismissed Reports</button>
+        <button class="btn-danger" onclick="confirmNuke()">💣 Delete All Posts (Nuclear Option)</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function saveSetting(key, val) {
+  // You can wire this to a real API endpoint later
+  showToast(`✅ Setting "${key}" ${val ? 'enabled' : 'disabled'}`);
+}
+
+function clearReports() {
+  if (!confirm('Clear all dismissed reports from the database?')) return;
+  showToast('🗑️ Reports cleared');
+}
+
+function confirmNuke() {
+  const typed = prompt('Type DELETE to confirm removing ALL posts from the platform:');
+  if (typed === 'DELETE') {
+    showToast('💣 Action would execute — wire up backend endpoint to complete.');
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --brand: #E1306C;
+  --sidebar-w: 240px;
+  --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+  --slate-400: #94a3b8; --slate-500: #64748b; --slate-600: #475569;
+  --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+}
+
+body { font-family: 'DM Sans', sans-serif; background: var(--slate-100); color: var(--slate-800); display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); background: #fff;
+  border-right: 1px solid var(--slate-200);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; height: 100vh;
+  z-index: 20; padding: 0;
+}
+
+.sidebar-brand {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--slate-100);
+}
+.sidebar-brand .brand-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #f97316, #e1306c, #833ab4);
+  border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 20px; margin-bottom: 10px;
+}
+.sidebar-brand h2 { font-size: 16px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.3px; }
+.sidebar-brand p { font-size: 11px; color: var(--slate-400); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.sidebar-nav { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+
+.nav-section-label {
+  font-size: 10px; font-weight: 700; color: var(--slate-400);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 12px 8px 6px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 10px;
+  color: var(--slate-600); text-decoration: none;
+  font-size: 14px; font-weight: 500;
+  transition: all 0.15s; cursor: pointer;
+}
+.nav-item:hover { background: var(--slate-100); color: var(--slate-900); }
+.nav-item.active { background: #fce7f3; color: var(--brand); font-weight: 700; }
+.nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; flex-shrink: 0; }
+
+.nav-item .badge {
+  margin-left: auto; background: var(--brand); color: #fff;
+  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 999px;
+}
+
+.sidebar-footer {
+  padding: 16px 12px;
+  border-top: 1px solid var(--slate-100);
+}
+
+/* ── MAIN ── */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+.topbar {
+  background: #fff; border-bottom: 1px solid var(--slate-200);
+  padding: 16px 28px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+.topbar h1 { font-size: 20px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.5px; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.admin-chip {
+  background: #fce7f3; color: var(--brand);
+  font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px;
+}
+
+.content { padding: 28px; flex: 1; }
+
+/* ── STAT CARDS ── */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px;
+}
+
+.stat-card {
+  background: #fff; border-radius: 16px; padding: 20px 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid var(--slate-100);
+  animation: fadeUp 0.4s ease both;
+}
+.stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stat-card:nth-child(2) { animation-delay: 0.1s; }
+.stat-card:nth-child(3) { animation-delay: 0.15s; }
+.stat-card:nth-child(4) { animation-delay: 0.2s; }
+
+.stat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.stat-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.stat-icon.blue { background: #eff6ff; }
+.stat-icon.green { background: #f0fdf4; }
+.stat-icon.pink { background: #fce7f3; }
+.stat-icon.amber { background: #fffbeb; }
+
+.stat-value { font-size: 28px; font-weight: 800; color: var(--slate-900); letter-spacing: -1px; }
+.stat-label { font-size: 12px; color: var(--slate-400); font-weight: 500; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* ── CHARTS + TABLES GRID ── */
+.bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.panel {
+  background: #fff; border-radius: 16px; padding: 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--slate-100);
+}
+.panel-title {
+  font-size: 15px; font-weight: 700; color: var(--slate-800); margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* quick action buttons */
+.quick-actions { display: flex; flex-direction: column; gap: 10px; }
+.qa-btn {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border-radius: 12px; text-decoration: none;
+  border: 1.5px solid var(--slate-200); color: var(--slate-700);
+  font-size: 14px; font-weight: 500; transition: all 0.15s;
+}
+.qa-btn:hover { border-color: var(--brand); color: var(--brand); background: #fce7f3; }
+.qa-btn .qa-icon { font-size: 20px; width: 24px; text-align: center; }
+.qa-btn .qa-label { flex: 1; }
+.qa-btn .qa-arrow { color: var(--slate-400); font-size: 12px; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🛡️</div>
+    <h2>Instagram Admin</h2>
+    <p>Control Panel</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="/admin/dashboard" class="nav-item active">
+      <span class="nav-icon">📊</span> Dashboard
+    </a>
+    <a href="/admin/analytics" class="nav-item">
+      <span class="nav-icon">📈</span> Analytics
+    </a>
+
+    <div class="nav-section-label">Moderation</div>
+    <a href="/admin/reports" class="nav-item">
+      <span class="nav-icon">🚩</span> Reported Posts
+      {% if data.reports > 0 %}<span class="badge">{{ data.reports }}</span>{% endif %}
+    </a>
+    <a href="/admin/posts" class="nav-item">
+      <span class="nav-icon">🖼️</span> All Posts
+    </a>
+
+    <div class="nav-section-label">Users</div>
+    <a href="/admin/users" class="nav-item">
+      <span class="nav-icon">👥</span> Manage Users
+    </a>
+    <a href="/admin/banned" class="nav-item">
+      <span class="nav-icon">🚫</span> Banned Users
+    </a>
+
+    <div class="nav-section-label">System</div>
+    <a href="/admin/settings" class="nav-item">
+      <span class="nav-icon">⚙️</span> Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="/admin/logout" class="nav-item" style="color:#ef4444;">
+      <span class="nav-icon">🚪</span> Logout
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h1>Dashboard</h1>
+    <div class="topbar-right">
+      <span class="admin-chip">🛡️ Admin</span>
+    </div>
+</div>
+<div class="content">
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+        <div class="stat-icon blue">👤</div>
+        </div>
+        <div class="stat-value">{{ data.users }}</div>
+        <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+        <div class="stat-icon green">🖼️</div>
+        </div>
+        <div class="stat-value">{{ data.posts }}</div>
+        <div class="stat-label">Total Posts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+        <div class="stat-icon pink">❤️</div>
+        </div>
+        <div class="stat-value">{{ data.likes }}</div>
+        <div class="stat-label">Total Likes</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+        <div class="stat-icon amber">🚩</div>
+        </div>
+        <div class="stat-value">{{ data.reports }}</div>
+        <div class="stat-label">Open Reports</div>
+    </div>
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="bottom-grid">
+
+    <!-- Chart -->
+    <div class="panel">
+        <div class="panel-title">📊 Platform Overview</div>
+        <canvas id="statsChart" height="220"></canvas>
+    </div>
+
+<!-- Quick Actions -->
+    <div class="panel">
+        <div class="panel-title">⚡ Quick Actions</div>
+        <div class="quick-actions">
+        <a href="/admin/reports" class="qa-btn">
+            <span class="qa-icon">🚩</span>
+            <span class="qa-label">Review Reported Posts</span>
+            <span class="qa-arrow">›</span>
+        </a>
+        <a href="/admin/users" class="qa-btn">
+            <span class="qa-icon">👥</span>
+            <span class="qa-label">Manage Users</span>
+            <span class="qa-arrow">›</span>
+        </a>
+        <a href="/admin/posts" class="qa-btn">
+            <span class="qa-icon">🖼️</span>
+            <span class="qa-label">Browse All Posts</span>
+            <span class="qa-arrow">›</span>
+        </a>
+        <a href="/admin/analytics" class="qa-btn">
+            <span class="qa-icon">📈</span>
+            <span class="qa-label">View Analytics</span>
+            <span class="qa-arrow">›</span>
+        </a>
+        <a href="/admin/banned" class="qa-btn">
+            <span class="qa-icon">🚫</span>
+            <span class="qa-label">Banned Users</span>
+            <span class="qa-arrow">›</span>
+        </a>
+        </div>
+    </div>
+
+    </div>
+</div>
+</div>
+
+<script>
+const ctx = document.getElementById('statsChart').getContext('2d');
+new Chart(ctx, {
+type: 'bar',
+data: {
+    labels: ['Users', 'Posts', 'Likes', 'Reports'],
+    datasets: [{
+    label: 'Count',
+    data: [{{ data.users }}, {{ data.posts }}, {{ data.likes }}, {{ data.reports }}],
+    backgroundColor: ['#bfdbfe', '#bbf7d0', '#fce7f3', '#fde68a'],
+    borderColor: ['#3b82f6', '#22c55e', '#e1306c', '#f59e0b'],
+    borderWidth: 2, borderRadius: 8,
+    }]
+},
+options: {
+    responsive: true, plugins: { legend: { display: false } },
+    scales: {
+    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'DM Sans' } } },
+    x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', weight: '600' } } }
+    }
+}
+});
+</script>
+</body>
+</html>

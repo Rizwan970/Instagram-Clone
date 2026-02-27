@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --brand: #E1306C; --sidebar-w: 240px;
+  --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+  --slate-400: #94a3b8; --slate-500: #64748b; --slate-600: #475569;
+  --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--slate-100); color: var(--slate-800); display: flex; min-height: 100vh; }
+.sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid var(--slate-200); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 20; }
+.sidebar-brand { padding: 24px 20px 20px; border-bottom: 1px solid var(--slate-100); }
+.brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #f97316, #e1306c, #833ab4); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+.sidebar-brand h2 { font-size: 16px; font-weight: 800; color: var(--slate-900); }
+.sidebar-brand p { font-size: 11px; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; }
+.sidebar-nav { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.nav-section-label { font-size: 10px; font-weight: 700; color: var(--slate-400); text-transform: uppercase; letter-spacing: 1px; padding: 12px 8px 6px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: var(--slate-600); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+.nav-item:hover { background: var(--slate-100); color: var(--slate-900); }
+.nav-item.active { background: #fce7f3; color: var(--brand); font-weight: 700; }
+.nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; flex-shrink: 0; }
+.sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--slate-100); }
+
+.main { margin-left: var(--sidebar-w); flex: 1; }
+.topbar { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.topbar h1 { font-size: 20px; font-weight: 800; color: var(--slate-900); }
+.admin-chip { background: #fce7f3; color: var(--brand); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; }
+.content { padding: 28px; }
+
+.stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
+.metric-card {
+  background: #fff; border-radius: 14px; padding: 18px 20px;
+  border: 1px solid var(--slate-100); box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.metric-icon { font-size: 24px; margin-bottom: 10px; }
+.metric-value { font-size: 26px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.5px; }
+.metric-label { font-size: 11px; font-weight: 600; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 3px; }
+
+.charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.panel { background: #fff; border-radius: 16px; padding: 22px; border: 1px solid var(--slate-100); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.panel-title { font-size: 15px; font-weight: 700; color: var(--slate-800); margin-bottom: 20px; }
+
+.engagement-rate {
+  display: flex; flex-direction: column; gap: 16px; margin-top: 8px;
+}
+.rate-row { display: flex; flex-direction: column; gap: 6px; }
+.rate-row-header { display: flex; justify-content: space-between; align-items: center; }
+.rate-label { font-size: 13px; font-weight: 600; color: var(--slate-700); }
+.rate-value { font-size: 13px; font-weight: 700; color: var(--slate-900); }
+.rate-bar { height: 8px; background: var(--slate-100); border-radius: 999px; overflow: hidden; }
+.rate-fill { height: 100%; border-radius: 999px; transition: width 1s ease; }
+.fill-blue { background: #3b82f6; }
+.fill-pink { background: #e1306c; }
+.fill-green { background: #22c55e; }
+.fill-amber { background: #f59e0b; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🛡️</div>
+    <h2>Instagram Admin</h2>
+    <p>Control Panel</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="/admin/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/admin/analytics" class="nav-item active"><span class="nav-icon">📈</span> Analytics</a>
+    <div class="nav-section-label">Moderation</div>
+    <a href="/admin/reports" class="nav-item"><span class="nav-icon">🚩</span> Reported Posts</a>
+    <a href="/admin/posts" class="nav-item"><span class="nav-icon">🖼️</span> All Posts</a>
+    <div class="nav-section-label">Users</div>
+    <a href="/admin/users" class="nav-item"><span class="nav-icon">👥</span> Manage Users</a>
+    <a href="/admin/banned" class="nav-item"><span class="nav-icon">🚫</span> Banned Users</a>
+    <div class="nav-section-label">System</div>
+    <a href="/admin/settings" class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="/admin/logout" class="nav-item" style="color:#ef4444;"><span class="nav-icon">🚪</span> Logout</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h1>📈 Analytics</h1>
+    <span class="admin-chip">🛡️ Admin</span>
+  </div>
+
+  <div class="content">
+
+    <div class="stats-row">
+      <div class="metric-card">
+        <div class="metric-icon">👤</div>
+        <div class="metric-value">{{ data.total_users }}</div>
+        <div class="metric-label">Total Users</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">🖼️</div>
+        <div class="metric-value">{{ data.total_posts }}</div>
+        <div class="metric-label">Total Posts</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">💬</div>
+        <div class="metric-value">{{ data.total_comments }}</div>
+        <div class="metric-label">Comments</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">❤️</div>
+        <div class="metric-value">{{ data.total_likes }}</div>
+        <div class="metric-label">Total Likes</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">🚩</div>
+        <div class="metric-value">{{ data.total_reports }}</div>
+        <div class="metric-label">Reports</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="panel">
+        <div class="panel-title">Platform Activity Overview</div>
+        <canvas id="barChart" height="180"></canvas>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Engagement Breakdown</div>
+        <div class="engagement-rate">
+          <div class="rate-row">
+            <div class="rate-row-header">
+              <span class="rate-label">👤 Users</span>
+              <span class="rate-value">{{ data.total_users }}</span>
+            </div>
+            <div class="rate-bar"><div class="rate-fill fill-blue" style="width: 100%"></div></div>
+          </div>
+          <div class="rate-row">
+            <div class="rate-row-header">
+              <span class="rate-label">🖼️ Posts</span>
+              <span class="rate-value">{{ data.total_posts }}</span>
+            </div>
+            <div class="rate-bar"><div class="rate-fill fill-pink" id="postBar" style="width: 0%"></div></div>
+          </div>
+          <div class="rate-row">
+            <div class="rate-row-header">
+              <span class="rate-label">❤️ Likes</span>
+              <span class="rate-value">{{ data.total_likes }}</span>
+            </div>
+            <div class="rate-bar"><div class="rate-fill fill-green" id="likeBar" style="width: 0%"></div></div>
+          </div>
+          <div class="rate-row">
+            <div class="rate-row-header">
+              <span class="rate-label">💬 Comments</span>
+              <span class="rate-value">{{ data.total_comments }}</span>
+            </div>
+            <div class="rate-bar"><div class="rate-fill fill-amber" id="commentBar" style="width: 0%"></div></div>
+          </div>
+        </div>
+        <canvas id="donutChart" height="180" style="margin-top: 24px;"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const users = {{ data.total_users }};
+const posts = {{ data.total_posts }};
+const comments = {{ data.total_comments }};
+const likes = {{ data.total_likes }};
+const reports = {{ data.total_reports }};
+const maxVal = Math.max(users, posts, likes, comments, 1);
+
+// Animate bars
+setTimeout(() => {
+  document.getElementById('postBar').style.width = (posts/maxVal*100) + '%';
+  document.getElementById('likeBar').style.width = (likes/maxVal*100) + '%';
+  document.getElementById('commentBar').style.width = (comments/maxVal*100) + '%';
+}, 200);
+
+// Bar chart
+new Chart(document.getElementById('barChart').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: ['Users', 'Posts', 'Likes', 'Comments', 'Reports'],
+    datasets: [{
+      data: [users, posts, likes, comments, reports],
+      backgroundColor: ['#bfdbfe','#fce7f3','#dcfce7','#fef3c7','#fee2e2'],
+      borderColor: ['#3b82f6','#e1306c','#22c55e','#f59e0b','#ef4444'],
+      borderWidth: 2, borderRadius: 8,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'DM Sans' } } },
+      x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', weight: '600' } } }
+    }
+  }
+});
+
+// Donut chart
+new Chart(document.getElementById('donutChart').getContext('2d'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Posts', 'Likes', 'Comments', 'Reports'],
+    datasets: [{
+      data: [posts, likes, comments, reports],
+      backgroundColor: ['#e1306c','#22c55e','#f59e0b','#ef4444'],
+      borderWidth: 0, hoverOffset: 4
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '65%',
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { family: 'DM Sans', size: 12 }, padding: 16 } }
+    }
+  }
+});
+</script>
+</body>
+</html>

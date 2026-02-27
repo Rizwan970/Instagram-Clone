@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banned Users · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --brand: #E1306C; --sidebar-w: 240px;
+  --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+  --slate-400: #94a3b8; --slate-500: #64748b; --slate-600: #475569;
+  --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--slate-100); color: var(--slate-800); display: flex; min-height: 100vh; }
+
+.sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid var(--slate-200); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 20; }
+.sidebar-brand { padding: 24px 20px 20px; border-bottom: 1px solid var(--slate-100); }
+.brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #f97316, #e1306c, #833ab4); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+.sidebar-brand h2 { font-size: 16px; font-weight: 800; color: var(--slate-900); }
+.sidebar-brand p { font-size: 11px; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; }
+.sidebar-nav { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.nav-section-label { font-size: 10px; font-weight: 700; color: var(--slate-400); text-transform: uppercase; letter-spacing: 1px; padding: 12px 8px 6px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: var(--slate-600); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+.nav-item:hover { background: var(--slate-100); color: var(--slate-900); }
+.nav-item.active { background: #fce7f3; color: var(--brand); font-weight: 700; }
+.nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; flex-shrink: 0; }
+.sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--slate-100); }
+
+.main { margin-left: var(--sidebar-w); flex: 1; }
+.topbar { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.topbar h1 { font-size: 20px; font-weight: 800; color: var(--slate-900); }
+.admin-chip { background: #fce7f3; color: var(--brand); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; }
+.content { padding: 28px; }
+
+/* BANNER */
+.ban-banner {
+  background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px;
+  padding: 14px 18px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; color: #dc2626; font-weight: 500;
+}
+
+/* TABLE */
+.panel { background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--slate-100); overflow: hidden; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--slate-50); border-bottom: 1px solid var(--slate-200); }
+th { padding: 12px 16px; font-size: 11px; font-weight: 700; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; text-align: left; }
+tbody tr { border-bottom: 1px solid var(--slate-100); transition: background 0.12s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--slate-50); }
+td { padding: 14px 16px; font-size: 14px; vertical-align: middle; }
+
+.user-cell { display: flex; align-items: center; gap: 12px; }
+.user-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; filter: grayscale(0.4); border: 2px solid #fecaca; }
+.user-name { font-weight: 600; color: var(--slate-900); }
+.user-email { font-size: 12px; color: var(--slate-400); }
+
+.badge-banned { display: inline-block; background: #fee2e2; color: #dc2626; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+
+.action-group { display: flex; gap: 6px; }
+.btn-sm { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1.5px solid; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.btn-unban { border-color: #bbf7d0; color: #16a34a; background: #fff; }
+.btn-unban:hover { background: #dcfce7; }
+.btn-delete { border-color: var(--slate-200); color: var(--slate-500); background: #fff; }
+.btn-delete:hover { background: #fee2e2; border-color: #fecaca; color: #dc2626; }
+
+.empty { text-align: center; padding: 60px; color: var(--slate-400); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty h3 { font-size: 17px; font-weight: 700; color: var(--slate-700); margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🛡️</div>
+    <h2>Instagram Admin</h2>
+    <p>Control Panel</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="/admin/dashboard" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/admin/analytics" class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
+    <div class="nav-section-label">Moderation</div>
+    <a href="/admin/reports" class="nav-item"><span class="nav-icon">🚩</span> Reported Posts</a>
+    <a href="/admin/posts" class="nav-item"><span class="nav-icon">🖼️</span> All Posts</a>
+    <div class="nav-section-label">Users</div>
+    <a href="/admin/users" class="nav-item"><span class="nav-icon">👥</span> Manage Users</a>
+    <a href="/admin/banned" class="nav-item active"><span class="nav-icon">🚫</span> Banned Users</a>
+    <div class="nav-section-label">System</div>
+    <a href="/admin/settings" class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="/admin/logout" class="nav-item" style="color:#ef4444;"><span class="nav-icon">🚪</span> Logout</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h1>🚫 Banned Users</h1>
+    <span class="admin-chip">🛡️ Admin</span>
+  </div>
+
+  <div class="content">
+    {% if users %}
+    <div class="ban-banner">
+      🚫 {{ users|length }} user{{ 's' if users|length != 1 }} currently banned from the platform.
+    </div>
+
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Posts</th>
+              <th>Joined</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr id="row-{{ user.id }}">
+              <td>
+                <div class="user-cell">
+                  <img class="user-avatar"
+                       src="{{ url_for('static', filename='uploads/' ~ user.profile_pic) }}"
+                       onerror="this.src='/static/uploads/default.jpg'">
+                  <div>
+                    <div class="user-name">{{ user.username }}</div>
+                    <div class="user-email">{{ user.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ user.posts_count }}</td>
+              <td>{{ user.created_at.strftime('%b %d, %Y') }}</td>
+              <td><span class="badge-banned">🚫 Banned</span></td>
+              <td>
+                <div class="action-group">
+                  <button class="btn-sm btn-unban" onclick="unbanUser({{ user.id }})">✅ Unban</button>
+                  <button class="btn-sm btn-delete" onclick="deleteUser({{ user.id }})">🗑️ Delete</button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="panel">
+      <div class="empty">
+        <div class="empty-icon">✅</div>
+        <h3>No Banned Users</h3>
+        <p>All users are currently in good standing.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function unbanUser(id) {
+  if (!confirm('Restore access for this user?')) return;
+  fetch(`/admin/unban-user/${id}`, { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { if (d.success) document.getElementById(`row-${id}`).remove(); });
+}
+
+function deleteUser(id) {
+  if (!confirm('⚠️ Permanently delete this user and all their content?')) return;
+  fetch(`/admin/delete-user/${id}`, { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { if (d.success) document.getElementById(`row-${id}`).remove(); });
+}
+</script>
+</body>
+</html>

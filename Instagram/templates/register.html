@@ -1,0 +1,83 @@
+<!-- templates/register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram - Sign up</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="instagram-logo">Instagram</div>
+            <p class="signup-subtitle">Sign up to see photos and videos from your friends.</p>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <input 
+                        type="email" 
+                        id="email" 
+                        placeholder="Email address" 
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        id="username" 
+                        placeholder="Username" 
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        placeholder="Password" 
+                        required
+                    >
+                </div>
+                <button type="submit" class="btn-login">Sign up</button>
+                <div id="errorMsg" class="error-message"></div>
+            </form>
+            
+            <div class="login-footer">
+                <p>Have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Registration successful! Please log in.');
+                    window.location.href = '/login';
+                } else {
+                    errorMsg.textContent = data.message || 'Registration failed';
+                }
+            } catch (error) {
+                errorMsg.textContent = 'An error occurred. Please try again.';
+            }
+        });
+    </script>
+</body>
+</html>

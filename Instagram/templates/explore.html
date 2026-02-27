@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore • Instagram</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #fafafa;
+            color: #262626;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── LEFT SIDEBAR ── */
+        .left-sidebar {
+            width: 245px;
+            padding: 20px 12px;
+            border-right: 1px solid #dbdbdb;
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: #fff;
+            z-index: 10;
+        }
+
+        .sidebar-logo {
+            font-size: 22px;
+            font-weight: 700;
+            font-style: italic;
+            padding: 16px 12px 28px;
+            letter-spacing: -0.5px;
+            color: #262626;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            border-radius: 12px;
+            color: #262626;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 400;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover { background: #f0f0f0; }
+        .nav-link.active { font-weight: 700; }
+
+        .nav-link .icon {
+            font-size: 24px;
+            width: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* ── MAIN EXPLORE AREA ── */
+        .explore-main {
+            margin-left: 245px;
+            flex: 1;
+            max-width: 935px;
+            padding: 0 20px;
+        }
+
+        /* ── SEARCH BAR ── */
+        .explore-search-wrap {
+            padding: 24px 0 20px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .search-bar-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            font-size: 16px;
+            color: #8e8e8e;
+            pointer-events: none;
+        }
+
+        #searchInput {
+            width: 100%;
+            background: #efefef;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 16px 12px 46px;
+            color: #262626;
+            font-size: 14px;
+            outline: none;
+            transition: background 0.2s;
+        }
+
+        #searchInput::placeholder { color: #8e8e8e; }
+        #searchInput:focus { background: #e0e0e0; }
+
+        /* ── SEARCH RESULTS DROPDOWN ── */
+        .search-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            border: 1px solid #dbdbdb;
+            overflow: hidden;
+            z-index: 100;
+            display: none;
+        }
+
+        .search-dropdown.active { display: block; }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            text-decoration: none;
+            color: #262626;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .search-result-item:hover { background: #fafafa; }
+
+        .search-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .search-user-info strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .search-user-info span {
+            font-size: 13px;
+            color: #8e8e8e;
+        }
+
+        /* empty / loading states */
+        .search-state {
+            padding: 24px 16px;
+            text-align: center;
+            color: #8e8e8e;
+            font-size: 14px;
+        }
+
+        /* ── SECTION TITLE ── */
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #262626;
+            padding: 0 0 16px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        /* ── EXPLORE GRID ── */
+        .explore-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            padding-bottom: 40px;
+        }
+
+        .grid-item {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .grid-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .grid-item:hover img { transform: scale(1.05); }
+
+        .grid-item .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            transition: opacity 0.2s;
+        }
+
+        .grid-item:hover .overlay { opacity: 1; }
+
+        .overlay-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        /* large featured tile */
+        .grid-item.large {
+            grid-row: span 2;
+        }
+
+        /* no posts placeholder */
+        .no-posts {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: #8e8e8e;
+            font-size: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .left-sidebar { width: 72px; }
+            .left-sidebar .nav-link span:not(.icon) { display: none; }
+            .sidebar-logo { font-size: 18px; padding: 16px 8px 28px; }
+            .explore-main { margin-left: 72px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="left-sidebar">
+        <div class="sidebar-logo">Instagram</div>
+        <nav>
+            <a href="{{ url_for('feed') }}" class="nav-link">
+                <span class="icon">🏠</span><span>Home</span>
+            </a>
+            <a href="{{ url_for('explore') }}" class="nav-link active">
+                <span class="icon">🔍</span><span>Explore</span>
+            </a>
+            <a href="{{ url_for('profile', username=current_user.username) }}" class="nav-link">
+                <span class="icon">👤</span><span>Profile</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-link">
+                <span class="icon">🚪</span><span>Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- MAIN EXPLORE CONTENT -->
+    <main class="explore-main">
+
+        <!-- SEARCH BAR -->
+        <div class="explore-search-wrap">
+            <div class="search-bar-container">
+                <span class="search-icon">🔍</span>
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search"
+                    autocomplete="off"
+                />
+                <div id="searchDropdown" class="search-dropdown">
+                    <div class="search-state" id="searchState">Try searching for a username</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXPLORE GRID -->
+        <div class="section-title">Explore</div>
+        <div class="explore-grid" id="exploreGrid">
+            {% if posts %}
+                {% for post in posts %}
+                <a href="/profile/{{ post.author.username }}"
+                   class="grid-item {% if loop.index0 % 5 == 0 %}large{% endif %}">
+                    <img src="{{ url_for('static', filename='uploads/' ~ post.image) }}"
+                         alt="{{ post.caption }}"
+                         loading="lazy">
+                    <div class="overlay">
+                        <span class="overlay-stat">❤️ {{ post.likes|length }}</span>
+                        <span class="overlay-stat">💬 {{ post.comments|length }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="no-posts">No posts to explore yet.</div>
+            {% endif %}
+        </div>
+
+    </main>
+</div>
+
+<script>
+const input = document.getElementById('searchInput');
+const dropdown = document.getElementById('searchDropdown');
+const stateDiv = document.getElementById('searchState');
+
+let debounceTimer;
+
+input.addEventListener('input', function () {
+    const q = this.value.trim();
+    clearTimeout(debounceTimer);
+
+    if (!q) {
+        dropdown.classList.remove('active');
+        stateDiv.textContent = 'Try searching for a username';
+        dropdown.innerHTML = '';
+        dropdown.appendChild(stateDiv);
+        return;
+    }
+
+    dropdown.classList.add('active');
+    stateDiv.textContent = 'Searching…';
+    dropdown.innerHTML = '';
+    dropdown.appendChild(stateDiv);
+
+    debounceTimer = setTimeout(async () => {
+        try {
+            const res = await fetch(`/api/search-users?q=${encodeURIComponent(q)}`);
+            const users = await res.json();
+            dropdown.innerHTML = '';
+
+            if (!users.length) {
+                const empty = document.createElement('div');
+                empty.className = 'search-state';
+                empty.textContent = `No users found for "${q}"`;
+                dropdown.appendChild(empty);
+                return;
+            }
+
+            users.forEach(user => {
+                const a = document.createElement('a');
+                a.className = 'search-result-item';
+                a.href = `/profile/${user.username}`;
+                a.innerHTML = `
+                    <img
+                        src="/static/uploads/${user.profile_pic}"
+                        class="search-avatar"
+                        onerror="this.src='/static/uploads/default.jpg'"
+                    >
+                    <div class="search-user-info">
+                        <strong>${escapeHtml(user.username)}</strong>
+                        <span>${escapeHtml(user.bio || '')}</span>
+                    </div>
+                `;
+                dropdown.appendChild(a);
+            });
+        } catch (err) {
+            const errDiv = document.createElement('div');
+            errDiv.className = 'search-state';
+            errDiv.textContent = 'Something went wrong. Try again.';
+            dropdown.innerHTML = '';
+            dropdown.appendChild(errDiv);
+        }
+    }, 300);
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function (e) {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('active');
+    }
+});
+
+input.addEventListener('focus', function () {
+    if (this.value.trim()) dropdown.classList.add('active');
+});
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
